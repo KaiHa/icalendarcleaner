@@ -33,3 +33,17 @@ executable icalendarcleaner
   build-depends:       base >=4.9 && <4.10, icalendarcleaner-lib
   hs-source-dirs:      icalendarcleaner
   default-language:    Haskell2010
+
+
+executable calendarmailer
+  main-is:             Main.hs
+  build-depends:       base >=4.9 && <4.10
+                     , icalendarcleaner-lib
+                     , bytestring
+                     , directory
+                     , filepath
+                     , tar
+                     , unix
+                     , zlib
+  hs-source-dirs:      calendarmailer
+  default-language:    Haskell2010
