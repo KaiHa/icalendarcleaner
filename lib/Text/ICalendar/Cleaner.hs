@@ -1,4 +1,4 @@
-module Main (main) where
+module Text.ICalendar.Cleaner (cleanFile) where
 
 import Prelude hiding (concat, readFile, writeFile)
 import Data.ByteString.Lazy (concat, readFile, writeFile)
@@ -8,10 +8,6 @@ import Data.Maybe
 import Data.Set (empty)
 import System.Environment
 import Text.ICalendar
-
-
-main :: IO ()
-main = getArgs >>= mapM_ cleanFile
 
 
 -- |Create a cleaned copy of 'FilePath'
