@@ -11,17 +11,19 @@ import Text.ICalendar
 
 
 -- |Create a cleaned copy of 'FilePath'
-cleanFile :: FilePath -> IO ()
-cleanFile f =
-  read f >>= clean >>= write (f ++ ".cleaned")
+cleanFile :: (FilePath -> FilePath) -- ^ Function to create an FilePath to which the cleaned version will be written
+          -> FilePath               -- ^ FilePath to the calendar that shall be cleaned
+          -> IO ()
+cleanFile newname c =
+  read c >>= clean >>= write (newname c)
   where
     un :: Either String ([VCalendar], [String]) -> [VCalendar]
     un (Left  a)      = error a
     un (Right (a, _)) = a
     read :: FilePath -> IO [VCalendar]
-    read f = un <$> parseICalendar def f <$> readFile f
+    read c = un <$> parseICalendar def c <$> readFile c
     write :: FilePath -> [VCalendar] -> IO ()
-    write f = writeFile f . concat . map (printICalendar def)
+    write c = writeFile c . concat . map (printICalendar def)
     clean :: Monad m => [VCalendar] -> m [VCalendar]
     clean = mapM $ return . cleanCalendar
 

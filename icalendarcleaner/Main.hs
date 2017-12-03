@@ -5,4 +5,4 @@ import Text.ICalendar.Cleaner
 
 
 main :: IO ()
-main = getArgs >>= mapM_ cleanFile
+main = getArgs >>= mapM_ (cleanFile (++ ".cleaned"))
