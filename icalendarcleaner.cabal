@@ -42,8 +42,7 @@ executable calendarmailer
                      , bytestring
                      , directory
                      , filepath
-                     , tar
+                     , process
                      , unix
-                     , zlib
   hs-source-dirs:      calendarmailer
   default-language:    Haskell2010
