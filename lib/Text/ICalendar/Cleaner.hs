@@ -1,27 +1,26 @@
 module Text.ICalendar.Cleaner (cleanFile) where
 
-import Prelude hiding (concat, readFile, writeFile)
+import Prelude hiding (concat, read, readFile, writeFile)
 import Data.ByteString.Lazy (concat, readFile, writeFile)
 import Data.Default
 import Data.Map (fromList, elems, keys)
-import Data.Maybe
 import Data.Set (empty)
-import System.Environment
 import Text.ICalendar
+import Text.ICalendar.Sanitizer
 
 
 -- |Create a cleaned copy of 'FilePath'
 cleanFile :: (FilePath -> FilePath) -- ^ Function to create an FilePath to which the cleaned version will be written
           -> FilePath               -- ^ FilePath to the calendar that shall be cleaned
           -> IO ()
-cleanFile newname c =
-  read c >>= clean >>= write (newname c)
+cleanFile newname f =
+  read f >>= clean >>= write (newname f)
   where
     un :: Either String ([VCalendar], [String]) -> [VCalendar]
     un (Left  a)      = error a
     un (Right (a, _)) = a
     read :: FilePath -> IO [VCalendar]
-    read c = un <$> parseICalendar def c <$> readFile c
+    read c = un <$> parseICalendar def c <$> sanitize c <$> readFile c
     write :: FilePath -> [VCalendar] -> IO ()
     write c = writeFile c . concat . map (printICalendar def)
     clean :: Monad m => [VCalendar] -> m [VCalendar]
