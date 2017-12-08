@@ -1,12 +1,13 @@
 module Text.ICalendar.Cleaner (cleanFile) where
 
-import Prelude hiding (concat, read, readFile, writeFile)
-import Data.ByteString.Lazy (concat, readFile, writeFile)
-import Data.Default
-import Data.Map (fromList, elems, keys)
-import Data.Set (empty)
-import Text.ICalendar
-import Text.ICalendar.Sanitizer
+import           Prelude hiding (concat, read, readFile, writeFile)
+import           Data.ByteString.Lazy (concat, readFile, writeFile)
+import           Data.Default
+import           Data.Map (fromList, elems, keys)
+import qualified Data.Set as S
+import           Data.Text.Lazy (pack)
+import           Text.ICalendar
+import           Text.ICalendar.Sanitizer
 
 
 -- |Create a cleaned copy of 'FilePath'
@@ -56,15 +57,23 @@ cleanEvent e = VEvent
   (veRecurId e)
   (veRRule e)
   (veDTEndDuration e)
-  empty -- veAttach
-  empty -- veAttendee
-  empty -- veCategories
-  empty -- veComment
-  empty -- veContact
-  (veExDate e)
-  empty -- veRStatus
-  empty -- veRelated
-  empty -- veResources
+  S.empty -- veAttach
+  S.empty -- veAttendee
+  S.empty -- veCategories
+  S.empty -- veComment
+  S.empty -- veContact
+  (myExDate e)
+  S.empty -- veRStatus
+  S.empty -- veRelated
+  S.empty -- veResources
   (veRDate e)
-  empty -- veAlarms
-  empty -- veOther
+  S.empty -- veAlarms
+  S.empty -- veOther
+  where
+    myExDate = S.map fixTZ . veExDate
+    fixTZ (ExDateTimes ts o) = ExDateTimes (S.map fixTZ' ts) o
+    fixTZ a                  = a
+    fixTZ' (ZonedDateTime dt tz) = if tz == pack "W. Europe Standard Time"
+                                     then ZonedDateTime dt $ pack "Europe/Berlin"
+                                     else ZonedDateTime dt tz
+    fixTZ' a                     = a
