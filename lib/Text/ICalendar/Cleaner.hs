@@ -13,15 +13,14 @@ import           Text.ICalendar.Sanitizer
 -- |Create a cleaned copy of 'FilePath'
 cleanFile :: (FilePath -> FilePath) -- ^ Function to create an FilePath to which the cleaned version will be written
           -> FilePath               -- ^ FilePath to the calendar that shall be cleaned
-          -> IO ()
+          -> IO (Maybe String)
 cleanFile newname f =
-  read f >>= clean >>= write (newname f)
+  read f >>= \c -> case c of
+                     (Left a)       -> return $ Just a
+                     (Right (a, _)) -> clean a >>= write (newname f) >> return Nothing
   where
-    un :: Either String ([VCalendar], [String]) -> [VCalendar]
-    un (Left  a)      = error a
-    un (Right (a, _)) = a
-    read :: FilePath -> IO [VCalendar]
-    read c = un <$> parseICalendar def c <$> sanitize c <$> readFile c
+    read :: FilePath -> IO (Either String ([VCalendar], [String]))
+    read c = parseICalendar def c <$> sanitize c <$> readFile c
     write :: FilePath -> [VCalendar] -> IO ()
     write c = writeFile c . concat . map (printICalendar def)
     clean :: Monad m => [VCalendar] -> m [VCalendar]

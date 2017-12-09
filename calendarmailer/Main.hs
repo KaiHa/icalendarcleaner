@@ -15,9 +15,11 @@ main = do
     destDir = tmpDir </> cleaned
     newname = (destDir </>) . takeFileName
   createDirectory destDir
-  getArgs >>= mapM_ (cleanFile newname)
+  getArgs >>= mapM_ ((p =<<) . cleanFile newname)
   callProcess "tar" ["cJf", tar, "-C", tmpDir, cleaned]
   removeDirectoryRecursive tmpDir
   where
     tar = "./cleaned-calendar.tar.xz"
     cleaned = "cleaned"
+    p (Just a) = putStrLn a
+    p Nothing  = return ()
