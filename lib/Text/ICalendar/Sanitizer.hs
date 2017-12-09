@@ -2,7 +2,7 @@ module Text.ICalendar.Sanitizer (sanitize) where
 
 import qualified Data.ByteString.Lazy as BS
 import           Data.ByteString.Lazy.Char8 (pack)
-import           Data.List (intercalate)
+import           Data.List (intercalate, isPrefixOf)
 import           Data.List.Extra (chunksOf)
 import           Text.Parsec
 
@@ -22,9 +22,9 @@ entry :: Parsec BS.ByteString UState String
 entry = do
   n <- name
   _ <- char ':'
-  v <- case n of
-    "DESCRIPTION" -> value ";"
-    _             -> value ""
+  v <- if "DESCRIPTION" `isPrefixOf` n
+       then value ";"
+       else value ""
   return $ n ++ ":" ++ v ++ "\n"
 
 
