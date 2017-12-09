@@ -1,11 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Text.ICalendar.Cleaner (cleanFile) where
 
 import           Prelude hiding (concat, read, readFile, writeFile)
 import           Data.ByteString.Lazy (concat, readFile, writeFile)
 import           Data.Default
-import           Data.Map (fromList, elems, keys)
+import qualified Data.Map as M
 import qualified Data.Set as S
-import           Data.Text.Lazy (pack)
 import           Text.ICalendar
 import           Text.ICalendar.Sanitizer
 
@@ -30,10 +30,10 @@ cleanFile newname f =
 
 cleanCalendar :: VCalendar -> VCalendar
 cleanCalendar c =
-  c { vcEvents = fromList (zip k events) }
+  c { vcEvents = M.fromList (zip k events) }
   where
-    events = map cleanEvent $ elems $ vcEvents c
-    k = keys $ vcEvents c
+    events = map cleanEvent $ M.elems $ vcEvents c
+    k = M.keys $ vcEvents c
 
 
 cleanEvent :: VEvent -> VEvent
@@ -71,9 +71,9 @@ cleanEvent e = VEvent
   S.empty -- veOther
   where
     myExDate = S.map fixTZ . veExDate
-    fixTZ (ExDateTimes ts o) = ExDateTimes (S.map fixTZ' ts) o
-    fixTZ a                  = a
-    fixTZ' (ZonedDateTime dt tz) = if tz == pack "W. Europe Standard Time"
-                                     then ZonedDateTime dt $ pack "Europe/Berlin"
-                                     else ZonedDateTime dt tz
-    fixTZ' a                     = a
+    fixTZ a@(ExDateTimes b _) = a { exDateTimes = S.map fixTZ' b }
+    fixTZ a                   = a
+    fixTZ' a@(ZonedDateTime _ tz) = if tz == "W. Europe Standard Time"
+                                    then a { dateTimeZone = "Europe/Berlin" }
+                                    else a
+    fixTZ' a                      = a
