@@ -6,6 +6,7 @@ import           Data.ByteString.Lazy (concat, readFile, writeFile)
 import           Data.Default
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Text.Lazy as T
 import           Text.ICalendar
 import           Text.ICalendar.Sanitizer
 
@@ -29,10 +30,11 @@ cleanFile newname f =
 
 cleanCalendar :: VCalendar -> VCalendar
 cleanCalendar c =
-  c { vcEvents = M.fromList (zip k events) }
+  c { vcEvents    = M.map cleanEvent $ vcEvents c
+    , vcTimeZones = M.map tzfix $ vcTimeZones c
+    }
   where
-    events = map cleanEvent $ M.elems $ vcEvents c
-    k = M.keys $ vcEvents c
+    tzfix a = a { vtzId = fixTZ $ vtzId a }
 
 
 cleanEvent :: VEvent -> VEvent
@@ -40,7 +42,7 @@ cleanEvent e = VEvent
   (veDTStamp e)
   (veUID e)
   (veClass e)
-  (veDTStart e)
+  (fixTZ <$> veDTStart e)
   (veCreated e)
   Nothing -- veDescription
   Nothing -- veGeo
@@ -55,7 +57,7 @@ cleanEvent e = VEvent
   Nothing -- veUrl
   (veRecurId e)
   (veRRule e)
-  (veDTEndDuration e)
+  (fixTZ <$> veDTEndDuration e)
   S.empty -- veAttach
   S.empty -- veAttendee
   S.empty -- veCategories
@@ -69,10 +71,35 @@ cleanEvent e = VEvent
   S.empty -- veAlarms
   S.empty -- veOther
   where
-    myExDate = S.map fixTZ . veExDate
-    fixTZ a@(ExDateTimes b _) = a { exDateTimes = S.map fixTZ' b }
-    fixTZ a                   = a
-    fixTZ' a@(ZonedDateTime _ tz) = if tz == "W. Europe Standard Time"
-                                    then a { dateTimeZone = "Europe/Berlin" }
-                                    else a
-    fixTZ' a                      = a
+    myExDate = S.map fixTZ' . veExDate
+    fixTZ' a@(ExDateTimes b _) = a { exDateTimes = S.map fixTZ b }
+    fixTZ' a                   = a
+
+
+instance FixTZ T.Text where
+  fixTZ a = if a == "W. Europe Standard Time"
+               || "(UTC+01:00) Amsterdam" `T.isPrefixOf` a
+            then "Europe/Berlin"
+            else a
+
+instance FixTZ DateTime where
+  fixTZ a@(ZonedDateTime _ b) = a { dateTimeZone = fixTZ b }
+  fixTZ a                     = a
+
+instance FixTZ a => FixTZ (Either a b) where
+  fixTZ (Left a) = Left $ fixTZ a
+  fixTZ a        = a
+
+instance FixTZ DTStart where
+  fixTZ a@(DTStartDateTime b _) = a { dtStartDateTimeValue = fixTZ b }
+  fixTZ a                       = a
+
+instance FixTZ DTEnd where
+  fixTZ a@(DTEndDateTime b _) = a { dtEndDateTimeValue = fixTZ b }
+  fixTZ a                       = a
+
+instance FixTZ TZID where
+  fixTZ a@(TZID b _ _) = a { tzidValue = fixTZ b }
+
+class FixTZ a where
+  fixTZ :: a -> a
