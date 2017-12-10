@@ -10,7 +10,7 @@ import           Text.ICalendar.Cleaner
 
 main :: IO ()
 main = do
-  tmpDir <- mkdtemp "calendarmailer"
+  tmpDir <- mkdtemp "/tmp/calendarmailer"
   let
     destDir = tmpDir </> cleaned
     newname = (destDir </>) . takeFileName
