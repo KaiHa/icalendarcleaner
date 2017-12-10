@@ -13,12 +13,14 @@ import           Text.ICalendar.Sanitizer
 
 -- |Create a cleaned copy of 'FilePath'
 cleanFile :: (FilePath -> FilePath) -- ^ Function to create an FilePath to which the cleaned version will be written
+          -> ([VCalendar] -> [VCalendar])
           -> FilePath               -- ^ FilePath to the calendar that shall be cleaned
           -> IO (Maybe String)
-cleanFile newname f =
+cleanFile newname filter' f =
   read f >>= \c -> case c of
-                     (Left a)       -> return $ Just a
-                     (Right (a, _)) -> clean a >>= write (newname f) >> return Nothing
+                     (Left a)        -> return $ Just a
+                     (Right (a, _)) | filter' a == [] -> return Nothing
+                                    | otherwise       -> clean (filter' a) >>= write (newname f) >> return Nothing
   where
     read :: FilePath -> IO (Either String ([VCalendar], [String]))
     read c = parseICalendar def c <$> sanitize c <$> readFile c

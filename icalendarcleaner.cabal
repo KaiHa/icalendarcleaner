@@ -46,9 +46,12 @@ executable calendarmailer
   build-depends:       base >=4.8
                      , icalendarcleaner-lib
                      , bytestring
+                     , containers >=0.5
                      , directory
                      , filepath
+                     , iCalendar >=0.4
                      , process
+                     , text
                      , unix
   hs-source-dirs:      calendarmailer
   default-language:    Haskell2010

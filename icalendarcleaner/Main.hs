@@ -5,7 +5,7 @@ import Text.ICalendar.Cleaner
 
 
 main :: IO ()
-main = getArgs >>= mapM_ ((p =<<) . cleanFile (++ ".cleaned"))
+main = getArgs >>= mapM_ ((p =<<) . cleanFile (++ ".cleaned") id)
   where
     p (Just a) = putStrLn a
     p Nothing  = return ()
