@@ -1,0 +1,3 @@
+[submodule "iCalendar"]
+	path = iCalendar
+	url = https://github.com/KaiHa/iCalendar.git
