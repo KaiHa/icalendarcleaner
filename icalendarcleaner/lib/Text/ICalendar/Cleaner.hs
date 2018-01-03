@@ -79,10 +79,10 @@ cleanEvent e = VEvent
 
 
 instance FixTZ T.Text where
-  fixTZ a = if a == "W. Europe Standard Time"
-               || "(UTC+01:00) Amsterdam" `T.isPrefixOf` a
-            then "Europe/Berlin"
-            else a
+  fixTZ "W. Europe Standard Time"                    = "Europe/Berlin"
+  fixTZ "Singapore Standard Time"                    = "Asia/Kuala_Lumpur"
+  fixTZ a | "(UTC+01:00) Amsterdam" `T.isPrefixOf` a = "Europe/Berlin"
+          | otherwise                                = a
 
 instance FixTZ DateTime where
   fixTZ a@(ZonedDateTime _ b) = a { dateTimeZone = fixTZ b }
